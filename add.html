@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>নতুন ব্যক্তি · ভবানীপুর ডাটাবেজ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="add">
+<main>
+  <section class="panel">
+    <h2>নতুন ব্যক্তির তথ্য যোগ করুন</h2>
+    <p>আগে দাদা, তারপর বাবা নির্বাচন করে তথ্য দিন।</p>
+    <form id="personForm">
+      <div class="field"><label for="grandfatherSelect">দাদার নাম <b>*</b></label><select id="grandfatherSelect" required><option value="">দাদার নাম নির্বাচন করুন</option></select></div>
+      <div class="field"><label for="fatherSelect">বাবার নাম <b>*</b></label><select id="fatherSelect" required disabled><option value="">আগে দাদা নির্বাচন করুন</option></select><small>নির্বাচিত দাদার ছেলেদের তালিকা আসবে।</small></div>
+      <div class="field"><label for="personName">ব্যক্তির পূর্ণ নাম <b>*</b></label><input id="personName" required maxlength="200" placeholder="যেমন: মোঃ আব্দুল করিম"></div>
+      <div class="row">
+        <div class="field"><label for="mobile">মোবাইল নম্বর</label><input id="mobile" inputmode="numeric" maxlength="20" placeholder="01XXXXXXXXX"></div>
+        <div class="field"><label for="title">পরিচিতি / পেশা</label><input id="title" maxlength="200" placeholder="যেমন: কৃষক, ব্যবসায়ী"></div>
+      </div>
+      <div class="field"><label for="address">পূর্ণ ঠিকানা</label><textarea id="address" rows="3" maxlength="500" placeholder="গ্রাম, পাড়া, ইউনিয়ন, উপজেলা"></textarea></div>
+      <button class="btn primary" type="submit" id="submitBtn">তথ্য জমা দিন</button>
+      <div class="msg" id="formResponse" role="status" hidden></div>
+    </form>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

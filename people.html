@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>তথ্য তালিকা · ভবানীপুর ডাটাবেজ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="people">
+<main>
+  <div class="head" style="margin-top:0"><h2>তথ্য তালিকা</h2><button class="btn" id="refreshBtn" type="button">↻ হালনাগাদ</button></div>
+  <input id="searchInput" type="search" placeholder="নাম, মোবাইল, ঠিকানা বা পরিচিতি লিখুন" autocomplete="off" aria-label="খুঁজুন">
+  <div class="count"><span id="resultCount">তথ্য আনা হচ্ছে…</span></div>
+  <div class="list" id="peopleList"><div class="loading">তথ্য লোড হচ্ছে…</div></div>
+  <button class="btn more" id="moreBtn" type="button" hidden>আরও দেখুন</button>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

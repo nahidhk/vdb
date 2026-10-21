@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>ভবানীপুর ডাটাবেজ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="home">
+<main>
+  <section class="hero">
+    <h2>ভবানীপুর সমাজ কল্যাণ সংঘ</h2>
+    <p>নাম, মোবাইল বা ঠিকানা দিয়ে খুঁজুন, অথবা নতুন ব্যক্তির তথ্য যোগ করুন।</p>
+    <form class="search" action="people.html">
+      <input name="q" type="search" placeholder="নাম, মোবাইল বা ঠিকানা লিখুন" autocomplete="off" aria-label="খুঁজুন">
+      <button class="btn primary" type="submit">খুঁজুন</button>
+    </form>
+  </section>
+  <div class="stats">
+    <div class="stat"><b id="sTotal">–</b><span>মোট ব্যক্তি</span></div>
+    <div class="stat"><b id="sRoots">–</b><span>দাদা</span></div>
+    <div class="stat"><b id="sMobile">–</b><span>মোবাইল আছে</span></div>
+  </div>
+  <div class="head"><h2>সর্বশেষ যুক্ত</h2><a href="people.html">সব দেখুন</a></div>
+  <div class="list" id="recent"><div class="loading">তথ্য লোড হচ্ছে…</div></div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
