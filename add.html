@@ -8,6 +8,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
+<style>
+  .help-note{
+    display:flex;gap:12px;align-items:flex-start;
+    margin-top:20px;padding:14px 16px;
+    background:#f5f8ff;border:1px solid #dbe4ff;border-left:4px solid #4f6ef7;
+    border-radius:12px;color:#334155;font-size:14.5px;line-height:1.6;
+  }
+  .help-note .ic{
+    flex:none;width:32px;height:32px;border-radius:50%;
+    display:grid;place-items:center;
+    background:#e3eaff;color:#3b57e0;font-size:16px;
+  }
+  .help-note b{display:block;color:#1e293b;font-weight:600;margin-bottom:2px}
+  .help-note a{
+    color:#3b57e0;font-weight:600;text-decoration:none;
+    border-bottom:1px dashed currentColor;word-break:break-all;
+  }
+  .help-note a:hover{color:#2540c4}
+</style>
 </head>
 <body data-page="add">
 <main>
@@ -26,6 +45,15 @@
       <button class="btn primary" type="submit" id="submitBtn">তথ্য জমা দিন</button>
       <div class="msg" id="formResponse" role="status" hidden></div>
     </form>
+
+    <div class="help-note">
+      <span class="ic" aria-hidden="true">✉</span>
+      <div>
+        <b>তথ্য মুছতে বা পরিবর্তন করতে চান?</b>
+        কোনো তথ্য মুছতে বা পরিবর্তন করতে মেইল করুন
+        <a href="mailto:nahid@ndsql.top">nahid@ndsql.top</a> এ
+      </div>
+    </div>
   </section>
 </main>
 <script src="app.js"></script>
