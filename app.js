@@ -6,7 +6,7 @@
   const $ = id => document.getElementById(id);
   const page = document.body.dataset.page;
   const NAV = [["index.html", "home", "হোম"], ["people.html", "people", "তথ্য তালিকা"], ["add.html", "add", "নতুন ব্যক্তি"]];
-  let allPeople = [], names = new Map(), visibleLimit = 10, toastTimer;
+  let allPeople = [], names = new Map(), visibleLimit = 10, toastTimer, gfCombo = null;
 
   function chrome() {
     document.body.insertAdjacentHTML("afterbegin",
@@ -37,6 +37,115 @@
   const getName = id => (id === null || id === undefined || id === "") ? "—" : (names.get(String(id)) || `আইডি ${id}`);
   const isGrandfather = p => Number(p.father_id) === 1 || Number(p.id) === 1;
 
+  /* ---------- Searchable input + dropdown (select-এর বদলে) ---------- */
+  function injectComboStyle() {
+    if (document.getElementById("cbxStyle")) return;
+    const st = document.createElement("style");
+    st.id = "cbxStyle";
+    st.textContent = `
+      .cbx{position:relative;width:100%}
+      .cbx input{width:100%;box-sizing:border-box}
+      .cbx-list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;max-height:240px;overflow-y:auto;
+        background:#fff;color:#111;border:1px solid #d0d5dd;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:4px}
+      .cbx-list[hidden]{display:none}
+      .cbx-item{padding:9px 12px;border-radius:8px;cursor:pointer;font-size:15px}
+      .cbx-item small{opacity:.6;margin-left:6px}
+      .cbx-item:hover,.cbx-item.act{background:#eef2ff}
+      .cbx-empty{padding:10px 12px;opacity:.6;font-size:14px}`;
+    document.head.appendChild(st);
+  }
+
+  function makeCombo(sel, placeholder) {
+    injectComboStyle();
+    sel.style.display = "none";
+    sel.required = false; // লুকানো select-এ required থাকলে ফর্ম আটকে যায়; জমা দেওয়ার সময় আমরা নিজেই চেক করি
+
+    const wrap = document.createElement("div");
+    wrap.className = "cbx";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.autocomplete = "off";
+    input.placeholder = placeholder;
+    input.setAttribute("role", "combobox");
+    input.setAttribute("aria-expanded", "false");
+    const list = document.createElement("div");
+    list.className = "cbx-list";
+    list.hidden = true;
+    wrap.append(input, list);
+    sel.parentNode.insertBefore(wrap, sel.nextSibling);
+
+    let items = [], shown = [], active = -1;
+
+    const open = () => { list.hidden = false; input.setAttribute("aria-expanded", "true"); };
+    const close = () => { list.hidden = true; input.setAttribute("aria-expanded", "false"); active = -1; };
+
+    function highlight() {
+      [...list.querySelectorAll(".cbx-item")].forEach((el, i) => el.classList.toggle("act", i === active));
+      const el = list.querySelectorAll(".cbx-item")[active];
+      if (el) el.scrollIntoView({ block: "nearest" });
+    }
+
+    function renderList(filter) {
+      const q = (filter || "").trim().toLocaleLowerCase();
+      shown = items.filter(it => !q || it.label.toLocaleLowerCase().includes(q) || String(it.value).includes(q));
+      active = shown.length ? 0 : -1;
+      list.innerHTML = shown.length
+        ? shown.map((it, i) => `<div class="cbx-item" data-i="${i}">${esc(it.label)}<small>আইডি: ${esc(it.value)}</small></div>`).join("")
+        : '<div class="cbx-empty">কোনো নাম পাওয়া যায়নি</div>';
+      highlight();
+      open();
+    }
+
+    function pick(it) {
+      sel.value = String(it.value);
+      input.value = it.label;
+      close();
+      sel.dispatchEvent(new Event("change"));
+    }
+
+    input.addEventListener("focus", () => renderList(sel.value ? "" : input.value));
+    input.addEventListener("click", () => { if (list.hidden) renderList(sel.value ? "" : input.value); });
+    input.addEventListener("input", () => {
+      if (sel.value) { sel.value = ""; sel.dispatchEvent(new Event("change")); } // টাইপ বদলালে আগের সিলেকশন বাতিল
+      renderList(input.value);
+    });
+    input.addEventListener("keydown", e => {
+      if (e.key === "ArrowDown") { e.preventDefault(); if (list.hidden) renderList(input.value); else { active = Math.min(active + 1, shown.length - 1); highlight(); } }
+      else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); highlight(); }
+      else if (e.key === "Enter") { if (!list.hidden && shown[active]) { e.preventDefault(); pick(shown[active]); } }
+      else if (e.key === "Escape") { close(); }
+    });
+    // mousedown ব্যবহার করা হয়েছে যাতে input-এর blur আগে না ঘটে
+    list.addEventListener("mousedown", e => {
+      const el = e.target.closest(".cbx-item");
+      if (!el) return;
+      e.preventDefault();
+      pick(shown[Number(el.dataset.i)]);
+    });
+    document.addEventListener("mousedown", e => { if (!wrap.contains(e.target)) close(); });
+    input.addEventListener("blur", () => {
+      // ঠিক নামটা লিখে ফেললে স্বয়ংক্রিয়ভাবে সিলেক্ট হবে
+      if (!sel.value) {
+        const t = input.value.trim().toLocaleLowerCase();
+        const exact = t && items.filter(it => it.name.toLocaleLowerCase() === t);
+        if (exact && exact.length === 1) pick(exact[0]);
+      }
+      setTimeout(close, 0);
+    });
+
+    return {
+      setItems(newItems) {
+        items = newItems;
+        sel.innerHTML = '<option value=""></option>' + items.map(it => `<option value="${esc(it.value)}">${esc(it.label)}</option>`).join("");
+        const cur = items.find(it => String(it.value) === sel.dataset.keep);
+        if (cur) { sel.value = String(cur.value); input.value = cur.name; }
+        else { sel.value = ""; }
+      },
+      remember() { sel.dataset.keep = sel.value; },
+      clear() { sel.value = ""; input.value = ""; sel.dataset.keep = ""; }
+    };
+  }
+
   function card(p) {
     const mobile = val(p.mobile);
     return `<article class="card"><div class="av">${esc((p.name || "ত").trim().charAt(0) || "ত")}</div><div>
@@ -61,13 +170,15 @@
     $("peopleList").innerHTML = list.length ? list.slice(0, visibleLimit).map(card).join("") : '<div class="empty">কোনো তথ্য পাওয়া যায়নি। বানান ঠিক করে আবার চেষ্টা করুন।</div>';
     $("moreBtn").hidden = list.length <= visibleLimit;
   }
-  function renderGrandfathers() {
-    const sel = $("grandfatherSelect"), cur = sel.value, roots = allPeople.filter(isGrandfather);
-    sel.innerHTML = '<option value="">দাদার নাম নির্বাচন করুন</option>' +
-      roots.map(p => `<option value="${esc(p.id)}">${esc(p.name || "নাম নেই")} (আইডি: ${esc(p.id)})</option>`).join("");
-    if (roots.some(p => String(p.id) === cur)) sel.value = cur;
-    updateFathers();
-  }
+function renderGrandfathers() {
+  gfCombo.remember(); // রিফ্রেশের সময়ও বর্তমান সিলেকশন ধরে রাখা
+  gfCombo.setItems(allPeople.map(p => ({
+    value: p.id,
+    name: p.name || "নাম নেই",
+    label: p.name || "নাম নেই"
+  })));
+  updateFathers();
+}
   function updateFathers() {
     const gid = $("grandfatherSelect").value, fs = $("fatherSelect");
     fs.innerHTML = '<option value="">বাবার নাম নির্বাচন করুন</option>';
@@ -106,6 +217,7 @@
     $("moreBtn").addEventListener("click", () => { visibleLimit += 10; renderPeople(); });
   }
   function initAdd() {
+    gfCombo = makeCombo($("grandfatherSelect"), "দাদার নাম লিখুন বা তালিকা থেকে বাছুন");
     $("grandfatherSelect").addEventListener("change", updateFathers);
     $("personForm").addEventListener("submit", async ev => {
       ev.preventDefault();
