@@ -3,6 +3,7 @@
   // Demo only: never publish a privileged API key in frontend code.
   const API_URL = "https://ndsql.top/api/vdb/users";
   const API_KEY = "nd_f94ad03853212365940dff43734c8a6f12388bd2";
+  const PAGE_SIZE = 100; // NdSQL docs: limit সর্বোচ্চ 100 (ডিফল্ট 50)
   const $ = id => document.getElementById(id);
   const page = document.body.dataset.page;
   const NAV = [["index.html", "home", "হোম"], ["people.html", "people", "তথ্য তালিকা"], ["add.html", "add", "নতুন ব্যক্তি"]];
@@ -23,17 +24,41 @@
   const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const val = v => (v === null || v === undefined || v === "" || v === 0) ? "" : String(v);
   function setConn(state, text) { $("conn").className = "conn " + state; $("conn").lastChild.textContent = text; }
-  async function api(method = "GET", body = null) {
-    const res = await fetch(API_URL, {
+
+  async function api(method = "GET", body = null, query = "") {
+    const res = await fetch(API_URL + query, {
       method,
       headers: { "X-API-Key": API_KEY, ...(body ? { "Content-Type": "application/json" } : {}) },
       ...(body ? { body: JSON.stringify(body) } : {})
     });
     const raw = await res.text();
     let data; try { data = raw ? JSON.parse(raw) : {}; } catch { data = { message: raw }; }
-    if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+    if (!res.ok) {
+      const e = data.error;
+      throw new Error((e && e.message) || data.message || (typeof e === "string" ? e : "") || `HTTP ${res.status}`);
+    }
     return data;
   }
+
+  const rowsOf = r => Array.isArray(r) ? r : (Array.isArray(r.data) ? r.data : []);
+
+  // সব পেজ এনে একসাথে করে (প্রতি পেজে ১০০ জন)
+  async function fetchAllPeople() {
+    const first = await api("GET", null, `?limit=${PAGE_SIZE}&p=1&order=id`);
+    let all = rowsOf(first);
+    const pages = Number(first.meta && first.meta.pages) || 1;
+    if (pages > 1) {
+      const rest = await Promise.all(
+        Array.from({ length: pages - 1 }, (_, i) => api("GET", null, `?limit=${PAGE_SIZE}&p=${i + 2}&order=id`))
+      );
+      rest.forEach(r => { all = all.concat(rowsOf(r)); });
+    }
+    // ডুপ্লিকেট এড়াতে id দিয়ে ইউনিক করা
+    const map = new Map();
+    all.forEach(p => map.set(String(p.id), p));
+    return [...map.values()];
+  }
+
   const getName = id => (id === null || id === undefined || id === "") ? "—" : (names.get(String(id)) || `আইডি ${id}`);
   const isGrandfather = p => Number(p.father_id) === 1 || Number(p.id) === 1;
 
@@ -170,15 +195,15 @@
     $("peopleList").innerHTML = list.length ? list.slice(0, visibleLimit).map(card).join("") : '<div class="empty">কোনো তথ্য পাওয়া যায়নি। বানান ঠিক করে আবার চেষ্টা করুন।</div>';
     $("moreBtn").hidden = list.length <= visibleLimit;
   }
-function renderGrandfathers() {
-  gfCombo.remember(); // রিফ্রেশের সময়ও বর্তমান সিলেকশন ধরে রাখা
-  gfCombo.setItems(allPeople.map(p => ({
-    value: p.id,
-    name: p.name || "নাম নেই",
-    label: p.name || "নাম নেই"
-  })));
-  updateFathers();
-}
+  function renderGrandfathers() {
+    gfCombo.remember(); // রিফ্রেশের সময়ও বর্তমান সিলেকশন ধরে রাখা
+    gfCombo.setItems(allPeople.map(p => ({
+      value: p.id,
+      name: p.name || "নাম নেই",
+      label: p.name || "নাম নেই"
+    })));
+    updateFathers();
+  }
   function updateFathers() {
     const gid = $("grandfatherSelect").value, fs = $("fatherSelect");
     fs.innerHTML = '<option value="">বাবার নাম নির্বাচন করুন</option>';
@@ -197,10 +222,9 @@ function renderGrandfathers() {
   async function loadPeople(showToast = false) {
     setConn("", "সংযোগ হচ্ছে…");
     try {
-      const r = await api("GET");
-      allPeople = Array.isArray(r) ? r : (Array.isArray(r.data) ? r.data : []);
+      allPeople = await fetchAllPeople();
       names = new Map(allPeople.map(p => [String(p.id), p.name]));
-      setConn("ok", "সংযুক্ত");
+      setConn("ok", `সংযুক্ত · ${allPeople.length} জন`);
       render();
       if (showToast) toast("তথ্য হালনাগাদ হয়েছে");
     } catch (e) {
