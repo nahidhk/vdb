@@ -57,5 +57,152 @@
   </section>
 </main>
 <script src="app.js"></script>
+
+<style>
+  .rules-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 99999;
+  }
+
+  .rules-popup {
+    background: #fff;
+    color: #222;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 14px;
+    padding: 22px;
+    position: relative;
+    font-family: sans-serif;
+    line-height: 1.7;
+    box-sizing: border-box;
+  }
+
+  .rules-popup h2 {
+    margin: 0 35px 12px 0;
+    font-size: 21px;
+    color: #14532d;
+  }
+
+  .rules-popup h3 {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .rules-popup p {
+    margin: 5px 0 12px;
+  }
+
+  .rules-popup .rule {
+    background: #f4f7f4;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    overflow-wrap: anywhere;
+  }
+
+  .rules-popup .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    border: none;
+    background: #eee;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    font-size: 23px;
+    cursor: pointer;
+  }
+
+  .rules-popup .confirm-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #166534;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+</style>
+
+<div class="rules-popup-overlay" id="rulesPopup">
+  <div class="rules-popup" role="dialog"
+       aria-modal="true" aria-labelledby="rulesTitle">
+
+    <button class="close-btn" id="closeRules"
+            aria-label="বন্ধ করুন">&times;</button>
+
+    <h2 id="rulesTitle">ব্যক্তি যুক্ত করার নিয়মাবলি</h2>
+
+    <p>
+      বংশপরিচয় সঠিকভাবে সংরক্ষণ করতে নিচের নিয়মগুলো অনুসরণ করুন।
+    </p>
+
+    <div class="rule">
+      <h3>১. দাদার নাম জানা না থাকলে</h3>
+      জানা নাই ১ → জানা নাই ২ → ব্যক্তির নাম
+    </div>
+
+    <div class="rule">
+      <h3>২. বাবার নাম জানা না থাকলে</h3>
+      জানা নাই ২ → দাদার নাম → বাবার নাম
+    </div>
+
+    <div class="rule">
+      <h3>৩. নিজের নাম যুক্ত করতে</h3>
+      দাদার নাম → বাবার নাম → নিজের নাম
+    </div>
+
+    <div class="rule">
+      <h3>৪. নিজের সন্তানের নাম যুক্ত করতে</h3>
+      নিজের বাবার নাম → নিজের নাম → সন্তানের নাম
+    </div>
+
+    <p>
+      <strong>গুরুত্বপূর্ণ:</strong>
+      এই ডেটাবেজে শুধুমাত্র পুরুষ ব্যক্তির তথ্য যুক্ত করা যাবে।
+      নাম জানা না থাকলে উপরের নিয়ম অনুযায়ী
+      “জানা নাই ১” অথবা “জানা নাই ২” ব্যবহার করুন।
+    </p>
+
+    <button class="confirm-btn" id="confirmRules">
+      বুঝেছি, এবার তথ্য যোগ করি
+    </button>
+  </div>
+</div>
+
+<script>
+  const rulesPopup = document.getElementById("rulesPopup");
+
+  // পেজ খুললেই Popup দেখাবে
+  rulesPopup.style.display = "flex";
+
+  function closeRulesPopup() {
+    rulesPopup.style.display = "none";
+  }
+
+  document.getElementById("closeRules")
+    .addEventListener("click", closeRulesPopup);
+
+  document.getElementById("confirmRules")
+    .addEventListener("click", closeRulesPopup);
+
+  rulesPopup.addEventListener("click", function (event) {
+    if (event.target === rulesPopup) {
+      closeRulesPopup();
+    }
+  });
+</script>
+
 </body>
 </html>
